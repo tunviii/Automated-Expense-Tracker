@@ -1,56 +1,66 @@
-# Welcome to your Expo app 👋
+# Automated Expense Tracker
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A small Expo + React Native portfolio MVP for turning transaction messages into a reviewable personal-finance ledger.
 
-## Get started
+## Current capabilities
 
-1. Install dependencies
+- Home dashboard with computed monthly spending, incoming credits, category bars, and recent transactions.
+- Transactions view with All, Debits, and Credits filters.
+- Honest local demo data with fixed fictional Indian-rupee transactions.
+- Pure rule-based SMS parser for text supplied manually by the user.
+- Built-in parser demo with sample text and visible missing-field handling.
+- Settings view that distinguishes demo data from unimplemented automation.
 
-   ```bash
-   npm install
-   ```
+## Technology
 
-2. Start the app
+- Expo SDK 57 and Expo Router
+- React Native 0.86 with TypeScript
+- React Native Safe Area Context
+- No chart, SMS, backend, or ML dependencies are bundled in this first commit.
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Run locally
 
 ```bash
-npm run reset-project
+npm install
+npm run typecheck
+npm run start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Then open the project with Expo Go, an Android emulator, an iOS simulator, or press `w` for the web build. `npm run lint` is available after the Expo ESLint configuration is installed.
 
-### Other setup steps
+## Project structure
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```text
+src/
+  app/                 Expo Router entry routes
+  components/          reusable dashboard, common, and transaction UI
+  constants/           theme and category metadata
+  data/                fixed fictional demo transactions
+  hooks/               derived expense totals and filters
+  navigation/          in-app MVP tab shell
+  screens/             Home, Transactions, and Settings views
+  services/sms/        pure parser and smoke assertions
+  types/               transaction contracts
+  utils/                currency and date formatting
+```
 
-## Learn more
+## Intentional limitations
 
-To learn more about developing your project with Expo, look at the following resources:
+The dashboard is powered by local mock data only. The parser reads only text manually provided to it and does not request SMS permissions, read notifications, or sync transactions. Automatic SMS/notification capture, persistence, account connections, backend APIs, and ML classification are planned work and are not connected to the mobile app.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Roadmap
 
-## Join the community
+1. Add a reviewed Android SMS or notification intake layer with explicit consent.
+2. Persist imported transactions and add an edit/review queue.
+3. Expose future ML classification through a separate service rather than bundling model artifacts in the React Native app.
+4. Add privacy-focused export and deletion controls.
 
-Join our community of developers creating universal apps.
+## Privacy
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Never commit real SMS messages, account identifiers, API keys, credentials, or personal financial data. The included transaction examples are fictional demo records.
+
+Suggested first commit:
+
+```text
+feat: add expense tracker mobile MVP and SMS parser demo
+```
