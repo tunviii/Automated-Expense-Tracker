@@ -2,11 +2,12 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { theme } from "@/constants/theme";
+import AnalyticsScreen from "@/screens/AnalyticsScreen";
 import ExpensesScreen from "@/screens/ExpensesScreen";
 import HomeScreen from "@/screens/HomeScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
 
-type Screen = "home" | "transactions" | "settings";
+type Screen = "home" | "transactions" | "analytics" | "settings";
 
 export default function AppNavigator() {
   const [screen, setScreen] = useState<Screen>("home");
@@ -15,6 +16,8 @@ export default function AppNavigator() {
       <HomeScreen onNavigate={setScreen} />
     ) : screen === "transactions" ? (
       <ExpensesScreen />
+    ) : screen === "analytics" ? (
+      <AnalyticsScreen />
     ) : (
       <SettingsScreen />
     );
@@ -26,6 +29,7 @@ export default function AppNavigator() {
           [
             ["home", "⌂", "Home"],
             ["transactions", "≡", "Transactions"],
+            ["analytics", "◈", "Analytics"],
             ["settings", "◌", "Settings"],
           ] as const
         ).map(([value, icon, label]) => (

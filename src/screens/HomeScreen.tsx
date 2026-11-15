@@ -1,7 +1,9 @@
 import { useState } from "react";
 import {
+    Alert,
     Modal,
     Pressable,
+    ScrollView,
     StyleSheet,
     Text,
     TextInput,
@@ -15,15 +17,26 @@ import { BalanceSummary } from "@/components/dashboard/BalanceSummary";
 import { CategoryBreakdown } from "@/components/dashboard/CategoryBreakdown";
 import { QuickAction } from "@/components/dashboard/QuickAction";
 import { TransactionItem } from "@/components/dashboard/TransactionItem";
+import { categories, categoryByLabel } from "@/constants/categories";
 import { theme } from "@/constants/theme";
 import { useExpenses } from "@/hooks/useExpenses";
+import { useExpenseStore } from "@/services/store/expenseStore";
 import { parseTransaction } from "@/services/sms/smsParser";
+import { isFinancialTransaction } from "@/services/sms/transactionDetector";
+import {
+  classifyExpense,
+  type ClassificationResult,
+} from "@/services/ml/expenseClassifier";
+import { convertParsedToExpense } from "@/utils/transactionConverter";
+import type { TransactionCategory } from "@/types/transaction";
 
 const sampleMessage =
   "Your A/C is debited for Rs 680.00 on 08-Mar-26; ALEXS KITCHEN credited. UPI: demo@upi";
 
 type HomeScreenProps = {
-  onNavigate?: (screen: "home" | "transactions" | "settings") => void;
+  onNavigate?: (
+    screen: "home" | "transactions" | "analytics" | "settings",
+  ) => void;
 };
 
 export default function HomeScreen({ onNavigate }: HomeScreenProps) {
@@ -34,15 +47,101 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
     categoryTotals,
     recentTransactions,
   } = useExpenses();
+  const addTransaction = useExpenseStore((state) => state.addTransaction);
+  const rememberMerchantCategory = useExpenseStore(
+    (state) => state.rememberMerchantCategory,
+  );
   const [parserVisible, setParserVisible] = useState(false);
   const [message, setMessage] = useState("");
   const [parsed, setParsed] = useState<ReturnType<
     typeof parseTransaction
   > | null>(null);
+  const [classification, setClassification] = useState<ClassificationResult | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<TransactionCategory>("Others");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [detectionWarning, setDetectionWarning] = useState<string | null>(null);
 
-  function runParser(value: string) {
+  // Dynamic greeting based on time of day
+  const hour = new Date().getHours();
+  const greeting =
+    hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+
+  // Dynamic date string
+  const today = new Date();
+  const dateString = today
+    .toLocaleDateString("en-US", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    })
+    .toUpperCase();
+
+  async function runParser(value: string) {
     setMessage(value);
-    setParsed(parseTransaction(value));
+    setDetectionWarning(null);
+
+    const check = isFinancialTransaction(value);
+    if (!check.isTransaction) {
+      if (check.reason === "OTP") {
+        setDetectionWarning("⚠️ Detected an OTP/Security code, not an expense transaction.");
+      } else if (check.reason === "PROMO") {
+        setDetectionWarning("ℹ️ Detected a promotional or loan offer message.");
+      }
+    }
+
+    const parsedResult = parseTransaction(value);
+    setParsed(parsedResult);
+
+    setIsProcessing(true);
+    try {
+      const classResult = await classifyExpense(
+        value,
+        parsedResult.merchant,
+        parsedResult.amount,
+      );
+      setClassification(classResult);
+      if (classResult) {
+        setSelectedCategory(classResult.category);
+      }
+    } catch {
+      setClassification(null);
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
+  function saveTransaction() {
+    if (!parsed) return;
+    const expense = convertParsedToExpense(parsed, {
+      category: selectedCategory,
+      confidence: classification?.confidence,
+    });
+    if (!expense) {
+      Alert.alert("Cannot save", "No amount was detected in the message.");
+      return;
+    }
+
+    // Use normalized merchant if recognized
+    if (classification?.normalizedMerchant) {
+      expense.merchant = classification.normalizedMerchant;
+    }
+
+    // Save category preference permanently to personal dictionary
+    if (expense.merchant) {
+      rememberMerchantCategory(expense.merchant, selectedCategory);
+    }
+
+    addTransaction(expense);
+    Alert.alert(
+      "Saved!",
+      `₹${expense.amount.toLocaleString("en-IN")} at ${expense.merchant} added under [${expense.category}].`,
+    );
+    setMessage("");
+    setParsed(null);
+    setClassification(null);
+    setSelectedCategory("Others");
+    setDetectionWarning(null);
+    setParserVisible(false);
   }
 
   return (
@@ -50,8 +149,8 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
       <ScreenContainer>
         <View style={styles.header}>
           <View>
-            <Text style={styles.kicker}>SUNDAY, 22 MARCH</Text>
-            <Text style={styles.title}>Good morning</Text>
+            <Text style={styles.kicker}>{dateString}</Text>
+            <Text style={styles.title}>{greeting}</Text>
           </View>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>AT</Text>
@@ -83,7 +182,11 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
             onPress={() => onNavigate?.("settings")}
           />
         </View>
-        <SectionHeader title="Spending by category" />
+        <SectionHeader
+          title="Spending by category"
+          actionLabel="Insights"
+          onAction={() => onNavigate?.("analytics")}
+        />
         <CategoryBreakdown items={categoryTotals} />
         <View style={styles.section}>
           <SectionHeader
@@ -174,6 +277,67 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
                   Method{" "}
                   <Text style={styles.resultValue}>{parsed.paymentMethod}</Text>
                 </Text>
+                <Text style={styles.resultRow}>
+                  Category{" "}
+                  <Text style={[styles.resultValue, styles.categoryBadge]}>
+                    {categoryByLabel[selectedCategory]?.icon} {selectedCategory}
+                    {classification && ` (${
+                      classification.source === "PERSONAL_OVERRIDE"
+                        ? "⭐ Your Preference"
+                        : classification.source === "MERCHANT_REGISTRY"
+                        ? "Known Merchant"
+                        : classification.source === "ML_API"
+                        ? `ML: ${Math.round(classification.confidence * 100)}%`
+                        : "Heuristic"
+                    })`}
+                  </Text>
+                </Text>
+                {isProcessing && (
+                  <Text style={styles.resultRow}>⏳ Classifying with ML...</Text>
+                )}
+                <View style={styles.categoryPickerContainer}>
+                  <Text style={styles.categoryPickerLabel}>Change category:</Text>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.categoryChipScroll}
+                  >
+                    {categories.map((cat) => {
+                      const isSelected = selectedCategory === cat.label;
+                      return (
+                        <Pressable
+                          key={cat.id}
+                          onPress={() => setSelectedCategory(cat.label)}
+                          style={[
+                            styles.categoryChip,
+                            isSelected && styles.categoryChipSelected,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.categoryChipText,
+                              isSelected && styles.categoryChipTextSelected,
+                            ]}
+                          >
+                            {cat.icon} {cat.label}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              </View>
+            )}
+            {detectionWarning && (
+              <View style={styles.warningBox}>
+                <Text style={styles.warningText}>{detectionWarning}</Text>
+              </View>
+            )}
+            {parsed && parsed.amount !== null && (
+              <View style={styles.saveButton}>
+                <AppButton onPress={saveTransaction}>
+                  Save transaction
+                </AppButton>
               </View>
             )}
           </View>
@@ -262,6 +426,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   parseButton: { marginTop: theme.spacing.sm },
+  saveButton: { marginTop: theme.spacing.md },
   result: {
     backgroundColor: theme.colors.primaryLight,
     borderRadius: theme.radius.md,
@@ -276,4 +441,54 @@ const styles = StyleSheet.create({
   },
   resultRow: { color: theme.colors.mutedText, fontSize: 14 },
   resultValue: { color: theme.colors.text, fontWeight: "700" },
+  categoryBadge: { color: theme.colors.primary },
+  warningBox: {
+    backgroundColor: "#FFF4E5",
+    borderColor: "#FFE2B8",
+    borderWidth: 1,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.md,
+    marginTop: theme.spacing.md,
+  },
+  warningText: {
+    color: "#B25E00",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  categoryPickerContainer: {
+    marginTop: theme.spacing.sm,
+    paddingTop: theme.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(36,75,60,0.12)",
+  },
+  categoryPickerLabel: {
+    color: theme.colors.mutedText,
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: theme.spacing.xs,
+  },
+  categoryChipScroll: {
+    gap: 6,
+    paddingVertical: 2,
+  },
+  categoryChip: {
+    backgroundColor: theme.colors.surface,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  categoryChipSelected: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  categoryChipText: {
+    fontSize: 12,
+    color: theme.colors.text,
+    fontWeight: "600",
+  },
+  categoryChipTextSelected: {
+    color: "#FFFFFF",
+  },
 });

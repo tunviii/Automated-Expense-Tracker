@@ -5,12 +5,14 @@ import type {
 } from "@/types/transaction";
 
 export function extractAmount(text: string): number | null {
-  const match = text.match(/\b(?:rs\.?|inr)\s*([\d,]+(?:\.\d{1,2})?)/i);
+  // Support Rs, Rs., INR, and ₹ symbols
+  const match = text.match(/(?:(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{1,2})?)|([\d,]+(?:\.\d{1,2})?)\s*(?:rs\.?|inr|₹))/i);
   if (!match) {
     return null;
   }
 
-  const amount = Number(match[1].replace(/,/g, ""));
+  const rawAmount = match[1] || match[2];
+  const amount = Number(rawAmount.replace(/,/g, ""));
   return Number.isFinite(amount) ? amount : null;
 }
 
@@ -57,7 +59,8 @@ export function extractDate(text: string): string | null {
 
 function cleanMerchant(value: string): string | null {
   const merchant = value
-    .replace(/[.;,:]+$/, "")
+    .replace(/^[.*_\s\-:,]+/, "")
+    .replace(/[.*_\s\-:,]+$/, "")
     .replace(/\s+/g, " ")
     .trim();
   return merchant.length > 0 ? merchant : null;
@@ -65,15 +68,26 @@ function cleanMerchant(value: string): string | null {
 
 export function extractMerchant(text: string): string | null {
   const patterns = [
+    // Pattern 1: ICICI/SBI "debited for Rs 680; ALEXS KITCHEN credited"
     /\bdebited\s+for\s+[^;]+;\s*(.+?)\s+credited\b/i,
-    /\bto\s+(.+?)\s+on\s+\d{2}\/\d{2}\/\d{2}\b/i,
-    /\bat\s+(.+?)\s+on\s+\d{4}-\d{2}-\d{2}\b/i,
+    // Pattern 2: HDFC "At MYNTRA DESIGNS On 2026-03-15" or "At SWIGGY On 12/03/26"
+    /\bAt\s+(.+?)\s+On\s+[\d\-:/]+/i,
+    // Pattern 3: "To Hyderabad Metro On 14/03/26" or "To Zomato Ref 12345"
+    /\bTo\s+(.+?)\s+(?:On\s+[\d\-:/]+|Ref\s+\d+|via\s+UPI|\.)/i,
+    // Pattern 4: "paid to SWIGGY via UPI" or "paid to KFC INDIA."
+    /\bpaid\s+to\s+(.+?)(?:\s+via|\s+from|\s+on|\.|$)/i,
+    // Pattern 5: "sent to ZOMATO." or "sent to SWIGGY via"
+    /\bsent\s+to\s+(.+?)(?:\s+via|\s+from|\s+on|\.|$)/i,
+    // Pattern 6: "at STARBUCKS COFFEE." or "at McDonald's"
+    /\bat\s+(.+?)(?:\s+via|\s+from|\s+Ref|\.|$)/i,
   ];
 
   for (const pattern of patterns) {
     const match = text.match(pattern);
     const merchant = match?.[1] ? cleanMerchant(match[1]) : null;
-    if (merchant) return merchant;
+    if (merchant && merchant.length > 1 && !/^(Rs|INR|account|card|bank)$/i.test(merchant)) {
+      return merchant;
+    }
   }
 
   return null;

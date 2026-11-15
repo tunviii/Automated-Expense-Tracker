@@ -24,7 +24,7 @@ export default function ExpensesScreen() {
       <Text style={styles.kicker}>LEDGER</Text>
       <Text style={styles.title}>Transactions</Text>
       <Text style={styles.subtitle}>
-        Your local, fictional transaction history.
+        Your tracked financial transactions.
       </Text>
       <View style={styles.filters}>
         {filters.map((option) => (

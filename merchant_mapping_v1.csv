@@ -1,0 +1,177 @@
+merchant_variant,normalized_merchant,category
+SWIGGY,swiggy,Food & Dining
+ZOMATO,zomato,Food & Dining
+DOMINOS PIZZA,dominos pizza,Food & Dining
+MCDONALDS INDIA,mcdonalds india,Food & Dining
+KFC INDIA,kfc india,Food & Dining
+STARBUCKS COFFEE,starbucks coffee,Food & Dining
+PARADISE RESTAURANT,paradise restaurant,Food & Dining
+SUBWAY INDIA,subway india,Food & Dining
+CAFE COFFEE DAY,cafe coffee day,Food & Dining
+CHAI POINT,chai point,Food & Dining
+BAWARCHI RESTAURANT,bawarchi restaurant,Food & Dining
+PISTA HOUSE,pista house,Food & Dining
+KARACHI BAKERY,karachi bakery,Food & Dining
+CAFE NILOUFER,cafe niloufer,Food & Dining
+ABSOLUTE BARBECUES,absolute barbecues,Food & Dining
+BASKIN ROBBINS,baskin robbins,Food & Dining
+TACO BELL INDIA,taco bell india,Food & Dining
+BURGER KING INDIA,burger king india,Food & Dining
+HALDIRAMS,haldirams,Food & Dining
+DUNKIN DONUTS,dunkin donuts,Food & Dining
+BIGBASKET,bigbasket,Groceries
+DMART,dmart,Groceries
+ZEPTO MARKETPLACE,zepto marketplace,Groceries
+RELIANCE SMART,reliance smart,Groceries
+BLINKIT,blinkit,Groceries
+MORE SUPERMARKET,more supermarket,Groceries
+SPENCERS RETAIL,spencers retail,Groceries
+VIJETHA SUPERMARKET,vijetha supermarket,Groceries
+RATNADEEP SUPER MARKET,ratnadeep super market,Groceries
+NATURES BASKET,natures basket,Groceries
+RELIANCE FRESH,reliance fresh,Groceries
+STARQUICK GROCERY,starquick grocery,Groceries
+D MART READY,d mart ready,Groceries
+MILK BASKET,milk basket,Groceries
+FRESH TO HOME,fresh to home,Groceries
+UBER INDIA,uber india,Transport
+OLA CABS,ola cabs,Transport
+RAPIDO,rapido,Transport
+HYDERABAD METRO,hyderabad metro,Transport
+TSRTC,tsrtc,Transport
+INDIAN RAILWAYS,indian railways,Transport
+RED BUS,red bus,Transport
+METRO RIDE,metro ride,Transport
+INDIAN OIL PETROL PUMP,indian oil petrol pump,Transport
+HP PETROL PUMP,hp petrol pump,Transport
+BHARAT PETROLEUM,bharat petroleum,Transport
+IRCTC,irctc,Transport
+AMAZON INDIA,amazon india,Shopping
+FLIPKART,flipkart,Shopping
+MYNTRA,myntra,Shopping
+AJIO,ajio,Shopping
+NYKAA,nykaa,Shopping
+ZARA INDIA,zara india,Shopping
+H&M INDIA,h&m india,Shopping
+MEESHO,meesho,Shopping
+SAVANA,savana,Shopping
+TATA CLiQ,tata cliq,Shopping
+WESTSIDE,westside,Shopping
+LIFESTYLE,lifestyle,Shopping
+DECATHLON,decathlon,Shopping
+CROMA,croma,Shopping
+RELIANCE DIGITAL,reliance digital,Shopping
+PVR CINEMAS,pvr cinemas,Entertainment
+INOX,inox,Entertainment
+BOOKMYSHOW,bookmyshow,Entertainment
+NETFLIX,netflix,Entertainment
+HOTSTAR,hotstar,Entertainment
+YOUTUBE PREMIUM,youtube premium,Entertainment
+AMAZON PRIME VIDEO,amazon prime video,Entertainment
+SONYLIV,sonyliv,Entertainment
+JIOHOTSTAR,jiohotstar,Entertainment
+CINEPOLIS,cinepolis,Entertainment
+SPOTIFY INDIA,spotify india,Subscription
+NETFLIX,netflix,Subscription
+GOOGLE ONE,google one,Subscription
+ADOBE,adobe,Subscription
+MICROSOFT 365,microsoft 365,Subscription
+NOTION,notion,Subscription
+YOUTUBE PREMIUM,youtube premium,Subscription
+AMAZON PRIME,amazon prime,Subscription
+APPLE SERVICES,apple services,Subscription
+DROPBOX,dropbox,Subscription
+UDEMY,udemy,Education
+COURSERA,coursera,Education
+SRI OM SARASWATHI STATIONERY,sri om saraswathi stationery,Education
+CROSSWORD BOOKSTORE,crossword bookstore,Education
+CAMPUS BOOK STORE,campus book store,Education
+LEETCODE PREMIUM,leetcode premium,Education
+GEEKSFORGEEKS,geeksforgeeks,Education
+UNACADEMY,unacademy,Education
+BYJUS,byjus,Education
+UPGRAD,upgrad,Education
+COACHING CENTER,coaching center,Education
+EXAM FEE PORTAL,exam fee portal,Education
+APOLLO PHARMACY,apollo pharmacy,Healthcare
+MEDPLUS,medplus,Healthcare
+CARE HOSPITAL,care hospital,Healthcare
+APOLLO HOSPITALS,apollo hospitals,Healthcare
+TATA 1MG,tata 1mg,Healthcare
+PRACTO,practo,Healthcare
+FORTIS HOSPITAL,fortis hospital,Healthcare
+YASHODA HOSPITALS,yashoda hospitals,Healthcare
+PHARMEASY,pharmeasy,Healthcare
+NETMEDS,netmeds,Healthcare
+DIAGNOSTIC LAB,diagnostic lab,Healthcare
+TSSPDCL,tsspdcl,Bills & Utilities
+ELECTRICITY BOARD,electricity board,Bills & Utilities
+JIO MOBILE,jio mobile,Bills & Utilities
+AIRTEL,airtel,Bills & Utilities
+ACT FIBERNET,act fibernet,Bills & Utilities
+HYDERABAD WATER BOARD,hyderabad water board,Bills & Utilities
+BSNL,bsnl,Bills & Utilities
+VODAFONE IDEA,vodafone idea,Bills & Utilities
+TATA POWER,tata power,Bills & Utilities
+GAS BILL PAYMENT,gas bill payment,Bills & Utilities
+BROADBAND BILL,broadband bill,Bills & Utilities
+DTH RECHARGE,dth recharge,Bills & Utilities
+MAKEMYTRIP,makemytrip,Travel
+GOIBIBO,goibibo,Travel
+IRCTC,irctc,Travel
+INDIGO AIRLINES,indigo airlines,Travel
+AIR INDIA,air india,Travel
+OYO ROOMS,oyo rooms,Travel
+CLEARTRIP,cleartrip,Travel
+EASEMYTRIP,easemytrip,Travel
+VISTARA,vistara,Travel
+AKASA AIR,akasa air,Travel
+BOOKING.COM,booking.com,Travel
+LAKME SALON,lakme salon,Personal Care
+URBAN COMPANY,urban company,Personal Care
+NATURALS SALON,naturals salon,Personal Care
+ENRICH SALON,enrich salon,Personal Care
+JAWED HABIB,jawed habib,Personal Care
+VLCC,vlcc,Personal Care
+KAYA SKIN CLINIC,kaya skin clinic,Personal Care
+THE MAN COMPANY,the man company,Personal Care
+BOMBAY SHAVING COMPANY,bombay shaving company,Personal Care
+LANDLORD RENT,landlord rent,Rent & Accommodation
+HOSTEL RENT,hostel rent,Rent & Accommodation
+ABC APARTMENTS,abc apartments,Rent & Accommodation
+PG ACCOMMODATION,pg accommodation,Rent & Accommodation
+HOUSE RENT,house rent,Rent & Accommodation
+NESTAWAY,nestaway,Rent & Accommodation
+COLIVE,colive,Rent & Accommodation
+STANZA LIVING,stanza living,Rent & Accommodation
+B GOWTHAM,b gowtham,Transfer
+RAHUL KUMAR,rahul kumar,Transfer
+PRIYA SHARMA,priya sharma,Transfer
+SAI KIRAN,sai kiran,Transfer
+ANIL KUMAR,anil kumar,Transfer
+SNEHA REDDY,sneha reddy,Transfer
+ROHIT VERMA,rohit verma,Transfer
+KARTHIK,karthik,Transfer
+DIVYA,divya,Transfer
+ARJUN REDDY,arjun reddy,Transfer
+FAMILY MEMBER,family member,Transfer
+TEMPLE DONATION,temple donation,Others
+CHARITY PAYMENT,charity payment,Others
+PARKING FEE,parking fee,Others
+GOVERNMENT SERVICE,government service,Others
+PASSPORT FEE,passport fee,Others
+COURT FEE,court fee,Others
+MISCELLANEOUS SERVICE,miscellaneous service,Others
+UNKNOWN MERCHANT,unknown merchant,Others
+CLUB PAYMENT,club payment,Others
+EVENT REGISTRATION,event registration,Others
+ALEXS KITCHEN,alexs kitchen,Food & Dining
+MYNTRA DESIGNS PRIVATE,myntra,Shopping
+Hyderabad Metro,hyderabad metro,Transport
+VIJETHA SUPER MARKETS PVT,vijetha supermarket,Groceries
+PURVI SRI HOSPITALITY SER,purvi sri hospitality,Food & Dining
+SPOTIFY INDIA PVT LTD,spotify,Subscription
+WWW SAVANA COM,savanna,Shopping
+VIJETHA SUPERMAR,vijetha supermarket,Groceries
+Sri Om Saraswathi Stationary,sri om saraswathi stationery,Education
+ZEPTO MARKETPLA,zepto,Groceries

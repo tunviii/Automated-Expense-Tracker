@@ -12,12 +12,16 @@ export function BalanceSummary({
   totalCredits: number;
   transactionCount: number;
 }) {
+  const now = new Date();
+  const monthName = now.toLocaleString("en-US", { month: "long" }).toUpperCase();
+  const year = now.getFullYear();
+
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>MARCH 2026 SPENDING</Text>
+      <Text style={styles.eyebrow}>{`${monthName} ${year} SPENDING`}</Text>
       <Text style={styles.amount}>{formatCurrency(totalSpent)}</Text>
       <Text style={styles.caption}>
-        Across {transactionCount} demo transactions
+        Across {transactionCount} transaction{transactionCount === 1 ? "" : "s"}
       </Text>
       <View style={styles.footer}>
         <View>
@@ -27,7 +31,9 @@ export function BalanceSummary({
         <View style={styles.rule} />
         <View>
           <Text style={styles.footerLabel}>Data source</Text>
-          <Text style={styles.footerValue}>Local demo data</Text>
+          <Text style={styles.footerValue}>
+            {transactionCount > 0 ? "Saved locally" : "Empty"}
+          </Text>
         </View>
       </View>
     </View>

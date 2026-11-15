@@ -1,11 +1,13 @@
 import { useMemo } from "react";
 
-import { mockTransactions } from "@/data/mockTransactions";
+import { useExpenseStore } from "@/services/store/expenseStore";
 import type { ExpenseTransaction, TransactionType } from "@/types/transaction";
 
 export function useExpenses() {
+  const transactions = useExpenseStore((state) => state.transactions);
+
   const totals = useMemo(() => {
-    return mockTransactions.reduce(
+    return transactions.reduce(
       (summary, transaction) => {
         if (transaction.transactionType === "CREDIT") {
           summary.credits += transaction.amount;
@@ -16,11 +18,11 @@ export function useExpenses() {
       },
       { debits: 0, credits: 0 },
     );
-  }, []);
+  }, [transactions]);
 
   const categoryTotals = useMemo(() => {
     const totalsByCategory = new Map<string, number>();
-    mockTransactions.forEach((transaction) => {
+    transactions.forEach((transaction) => {
       if (transaction.transactionType === "DEBIT") {
         totalsByCategory.set(
           transaction.category,
@@ -32,21 +34,24 @@ export function useExpenses() {
     return [...totalsByCategory.entries()]
       .map(([category, amount]) => ({ category, amount }))
       .sort((first, second) => second.amount - first.amount);
-  }, []);
+  }, [transactions]);
 
-  const recentTransactions = useMemo(() => mockTransactions.slice(0, 5), []);
+  const recentTransactions = useMemo(
+    () => transactions.slice(0, 5),
+    [transactions],
+  );
 
   function filterTransactions(
     filter: TransactionType | "ALL",
   ): ExpenseTransaction[] {
-    if (filter === "ALL") return mockTransactions;
-    return mockTransactions.filter(
+    if (filter === "ALL") return transactions;
+    return transactions.filter(
       (transaction) => transaction.transactionType === filter,
     );
   }
 
   return {
-    transactions: mockTransactions,
+    transactions,
     totalSpent: totals.debits,
     totalCredits: totals.credits,
     categoryTotals,
