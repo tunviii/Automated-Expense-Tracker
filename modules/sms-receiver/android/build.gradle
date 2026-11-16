@@ -1,2 +1,11 @@
-apply plugin: 'com.android.library'
-apply plugin: 'expo-module-gradle-plugin'
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'host.exp.exponent'
+version = '1.0.0'
+
+android {
+  namespace 'expo.modules.smsreceiver'
+}
