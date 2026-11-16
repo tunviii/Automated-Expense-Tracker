@@ -1,8 +1,4 @@
-import {
-  DeviceEventEmitter,
-  NativeModules,
-  Platform,
-} from "react-native";
+import { Platform } from "react-native";
 
 import {
   checkSmsPermissions,
@@ -13,6 +9,10 @@ import {
   type SmsProcessResult,
 } from "@/services/sms/smsAutoProcessor";
 import type { ExpenseTransaction } from "@/types/transaction";
+import {
+  getSmsReceiverModule,
+  type IncomingSms,
+} from "../../../modules/sms-receiver/src";
 
 export type SmsListenerStatus = {
   isSupported: boolean;
@@ -22,24 +22,42 @@ export type SmsListenerStatus = {
 };
 
 let isCurrentlyListening = false;
-let listenerSubscription: { remove: () => void } | null = null;
+let removeNativeListener: (() => void) | null = null;
+const recentlyProcessed = new Map<string, true>();
 
-/**
- * Checks whether native Android SMS receiver modules are loaded.
- * In Expo Go, native SMS receivers are not bundled, so fallback/simulation is used.
- */
-export function isNativeSmsModuleAvailable(): boolean {
-  if (Platform.OS !== "android") return false;
-  return Boolean(
-    NativeModules.SmsListenerModule ||
-      NativeModules.SmsAndroid ||
-      NativeModules.RNSmsReceiver,
-  );
+function messageKey(message: IncomingSms): string {
+  return `${message.sender}:${message.timestamp}:${message.messageBody}`;
 }
 
-/**
- * Gets current listener health and status.
- */
+async function handleIncomingMessage(
+  message: IncomingSms,
+  onDetected?: (txn: ExpenseTransaction) => void,
+): Promise<void> {
+  const body = message.messageBody?.trim();
+  if (!body) return;
+
+  const key = messageKey(message);
+  if (recentlyProcessed.has(key)) return;
+  recentlyProcessed.set(key, true);
+  if (recentlyProcessed.size > 200) {
+    const oldestKey = recentlyProcessed.keys().next().value;
+    if (oldestKey) recentlyProcessed.delete(oldestKey);
+  }
+
+  try {
+    const result = await processIncomingSms(body, message.sender);
+    if (result.processed && result.transaction && onDetected) {
+      onDetected(result.transaction);
+    }
+  } catch (error) {
+    console.warn("Failed to process incoming SMS:", error);
+  }
+}
+
+export function isNativeSmsModuleAvailable(): boolean {
+  return Platform.OS === "android" && getSmsReceiverModule() !== null;
+}
+
 export async function getSmsListenerStatus(): Promise<SmsListenerStatus> {
   if (Platform.OS !== "android") {
     return {
@@ -51,20 +69,15 @@ export async function getSmsListenerStatus(): Promise<SmsListenerStatus> {
   }
 
   const permission = await checkSmsPermissions();
-  const hasNative = isNativeSmsModuleAvailable();
-
   return {
     isSupported: true,
     isListening: isCurrentlyListening,
     permissionGranted: permission === "granted",
-    mode: hasNative ? "native" : "expo-go",
+    mode: isNativeSmsModuleAvailable() ? "native" : "expo-go",
   };
 }
 
-/**
- * Starts the automatic SMS background/foreground listener.
- * If running in a standalone APK, hooks into Android SMS_RECEIVED broadcasts.
- */
+/** Starts the Android SMS receiver and routes each message through the expense pipeline. */
 export async function startSmsListener(
   onDetected?: (txn: ExpenseTransaction) => void,
 ): Promise<{ success: boolean; message: string }> {
@@ -76,72 +89,63 @@ export async function startSmsListener(
   }
 
   const permission = await checkSmsPermissions();
-  if (permission !== "granted") {
-    const requested = await requestSmsPermissions();
-    if (!requested) {
-      return {
-        success: false,
-        message: "SMS permissions were not granted by the user.",
-      };
-    }
+  if (permission !== "granted" && !(await requestSmsPermissions())) {
+    return {
+      success: false,
+      message: "SMS permissions were not granted by the user.",
+    };
   }
 
-  // Check if native module is available
-  if (!isNativeSmsModuleAvailable()) {
+  const nativeModule = getSmsReceiverModule();
+  if (!nativeModule) {
+    return {
+      success: false,
+      message:
+        "This app build does not include the native SMS receiver. Install a newly built APK; Expo Go cannot receive SMS broadcasts.",
+    };
+  }
+
+  try {
+    removeNativeListener?.();
+    nativeModule.setEnabled(true);
     isCurrentlyListening = true;
+
+    // Subscribe first so messages arriving while queued messages are drained are not missed.
+    const subscription = nativeModule.addListener("onSMSReceived", (message) => {
+      void handleIncomingMessage(message, onDetected);
+    });
+    removeNativeListener = () => subscription.remove();
+
+    const pendingMessages = await nativeModule.getPendingMessages();
+    for (const message of pendingMessages) {
+      await handleIncomingMessage(message, onDetected);
+    }
+
     return {
       success: true,
       message:
-        "Running in Expo Go (simulated listener ready). Build the standalone APK for automatic hardware SMS broadcasts.",
+        "Automatic SMS listener is active. Incoming messages will be checked and transaction alerts saved.",
     };
-  }
-
-  // Subscribe to Android SMS event emitter
-  try {
-    listenerSubscription?.remove();
-
-    listenerSubscription = DeviceEventEmitter.addListener(
-      "onSMSReceived",
-      async (event: { messageBody?: string; body?: string }) => {
-        const text = event?.messageBody || event?.body || "";
-        if (!text) return;
-
-        const result = await processIncomingSms(text);
-        if (result.processed && result.transaction && onDetected) {
-          onDetected(result.transaction);
-        }
-      },
-    );
-
-    isCurrentlyListening = true;
-    return {
-      success: true,
-      message: "Automatic SMS listener is active and waiting for bank alerts.",
-    };
-  } catch (err) {
-    console.warn("Failed to attach SMS broadcast listener:", err);
+  } catch (error) {
+    isCurrentlyListening = false;
+    removeNativeListener?.();
+    removeNativeListener = null;
+    console.warn("Failed to start native SMS listener:", error);
     return {
       success: false,
-      message: `Failed to attach native SMS listener: ${String(err)}`,
+      message: `Failed to start the native SMS receiver: ${String(error)}`,
     };
   }
 }
 
-/**
- * Stops the active SMS listener.
- */
 export function stopSmsListener(): void {
-  if (listenerSubscription) {
-    listenerSubscription.remove();
-    listenerSubscription = null;
-  }
+  removeNativeListener?.();
+  removeNativeListener = null;
+  getSmsReceiverModule()?.setEnabled(false);
   isCurrentlyListening = false;
 }
 
-/**
- * Test utility: simulate an incoming SMS right now to verify the entire
- * automatic parsing, classification, and SQLite persistence flow.
- */
+/** Test utility: run a sample message through detection, parsing, classification, and SQLite. */
 export async function simulateIncomingSms(
   smsText: string,
 ): Promise<SmsProcessResult> {

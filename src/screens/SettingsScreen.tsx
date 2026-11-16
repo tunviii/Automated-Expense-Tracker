@@ -133,7 +133,7 @@ export default function SettingsScreen() {
             </Text>
             <Text style={styles.statusDetail}>
               {listenerStatus.mode === "expo-go"
-                ? "Running in Expo Go. The pipeline (filter → regex → 4-tier ML → SQLite) is live. Build standalone APK for hardware broadcast reception."
+                ? "Expo Go does not include the native SMS receiver. Install a standalone APK built after enabling this feature."
                 : listenerStatus.permissionGranted
                   ? "Android SMS permissions granted. Real-time broadcast receiver listening."
                   : "Android permissions required to listen to incoming bank SMS."}

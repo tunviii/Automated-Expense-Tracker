@@ -3,7 +3,7 @@ import { PermissionsAndroid, Platform } from "react-native";
 export type SmsPermissionStatus = "granted" | "denied" | "unsupported";
 
 /**
- * Checks whether both READ_SMS and RECEIVE_SMS permissions are granted.
+ * Checks whether Android allows this app to receive incoming SMS broadcasts.
  */
 export async function checkSmsPermissions(): Promise<SmsPermissionStatus> {
   if (Platform.OS !== "android") {
@@ -14,14 +14,7 @@ export async function checkSmsPermissions(): Promise<SmsPermissionStatus> {
     const hasReceive = await PermissionsAndroid.check(
       PermissionsAndroid.PERMISSIONS.RECEIVE_SMS,
     );
-    const hasRead = await PermissionsAndroid.check(
-      PermissionsAndroid.PERMISSIONS.READ_SMS,
-    );
-
-    if (hasReceive && hasRead) {
-      return "granted";
-    }
-    return "denied";
+    return hasReceive ? "granted" : "denied";
   } catch (err) {
     console.warn("Failed to check SMS permissions:", err);
     return "denied";
@@ -30,7 +23,7 @@ export async function checkSmsPermissions(): Promise<SmsPermissionStatus> {
 
 /**
  * Prompts the user with the standard Android runtime permission dialog
- * for both incoming SMS reception and reading messages.
+ * for incoming SMS reception. Reading the SMS inbox is not needed.
  */
 export async function requestSmsPermissions(): Promise<boolean> {
   if (Platform.OS !== "android") {
@@ -40,17 +33,12 @@ export async function requestSmsPermissions(): Promise<boolean> {
   try {
     const results = await PermissionsAndroid.requestMultiple([
       PermissionsAndroid.PERMISSIONS.RECEIVE_SMS,
-      PermissionsAndroid.PERMISSIONS.READ_SMS,
     ]);
 
     const receiveGranted =
       results[PermissionsAndroid.PERMISSIONS.RECEIVE_SMS] ===
       PermissionsAndroid.RESULTS.GRANTED;
-    const readGranted =
-      results[PermissionsAndroid.PERMISSIONS.READ_SMS] ===
-      PermissionsAndroid.RESULTS.GRANTED;
-
-    return receiveGranted && readGranted;
+    return receiveGranted;
   } catch (err) {
     console.warn("Failed to request SMS permissions:", err);
     return false;
