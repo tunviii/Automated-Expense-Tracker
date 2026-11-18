@@ -57,6 +57,20 @@ export function extractDate(text: string): string | null {
   return match?.[0] ?? null;
 }
 
+/** Extract the final four digits only when the SMS identifies them as an account suffix. */
+export function extractAccountLast4(text: string): string | null {
+  const patterns = [
+    /\b(?:a\/c|account|acct)(?:\s*(?:no\.?|number))?\s*[:#-]?\s*(?:x+|\*+)?\s*(\d{4,})\b/i,
+    /\b(?:account\s+)?(?:ending|ends|last\s*4)\s*[:#-]?\s*(?:x+|\*+)?\s*(\d{4,})\b/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match?.[1]) return match[1].slice(-4);
+  }
+  return null;
+}
+
 function cleanMerchant(value: string): string | null {
   const merchant = value
     .replace(/^[.*_\s\-:,]+/, "")
@@ -98,6 +112,7 @@ export function parseTransaction(text: string): ParsedTransaction {
     amount: extractAmount(text),
     merchant: extractMerchant(text),
     date: extractDate(text),
+    accountLast4: extractAccountLast4(text),
     transactionType: extractTransactionType(text),
     paymentMethod: extractPaymentMethod(text),
   };

@@ -29,6 +29,7 @@ export function convertParsedToExpense(
     id: generateId(),
     amount: parsed.amount,
     merchant: parsed.merchant ?? "Unknown Merchant",
+    accountLast4: parsed.accountLast4 ?? null,
     category: overrides?.category ?? "Others",
     date: parsed.date ?? now.toISOString().slice(0, 10), // YYYY-MM-DD
     transactionType:

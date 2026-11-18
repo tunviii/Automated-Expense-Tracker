@@ -29,6 +29,7 @@ export type ParsedTransaction = {
   amount: number | null;
   merchant: string | null;
   date: string | null;
+  accountLast4?: string | null;
   transactionType: TransactionType;
   paymentMethod: PaymentMethod;
 };
@@ -37,6 +38,7 @@ export type ExpenseTransaction = {
   id: string;
   amount: number;
   merchant: string;
+  accountLast4?: string | null;
   category: TransactionCategory;
   date: string;
   transactionType: Exclude<TransactionType, "UNKNOWN">;

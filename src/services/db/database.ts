@@ -41,6 +41,7 @@ export function initDatabase(): boolean {
         id TEXT PRIMARY KEY,
         amount REAL NOT NULL,
         merchant TEXT NOT NULL,
+        account_last4 TEXT,
         category TEXT NOT NULL,
         date TEXT NOT NULL,
         transaction_type TEXT NOT NULL,
@@ -61,6 +62,14 @@ export function initDatabase(): boolean {
         value TEXT NOT NULL
       );
     `);
+
+    // Add the nullable account suffix column to databases created by older app versions.
+    const transactionColumns = db.getAllSync<{ name: string }>(
+      `PRAGMA table_info(transactions);`,
+    );
+    if (!transactionColumns.some((column) => column.name === "account_last4")) {
+      db.execSync(`ALTER TABLE transactions ADD COLUMN account_last4 TEXT;`);
+    }
 
     // Auto-seed demo data once on first ever launch
     const seededRow = db.getFirstSync<{ value: string }>(
@@ -90,14 +99,15 @@ export function dbSaveTransaction(txn: ExpenseTransaction): void {
 
     const statement = db.prepareSync(`
       INSERT OR REPLACE INTO transactions (
-        id, amount, merchant, category, date, transaction_type, payment_method, confidence, is_user_corrected
-      ) VALUES ($id, $amount, $merchant, $category, $date, $type, $method, $confidence, $corrected);
+        id, amount, merchant, account_last4, category, date, transaction_type, payment_method, confidence, is_user_corrected
+      ) VALUES ($id, $amount, $merchant, $accountLast4, $category, $date, $type, $method, $confidence, $corrected);
     `);
 
     statement.executeSync({
       $id: txn.id,
       $amount: txn.amount,
       $merchant: txn.merchant,
+      $accountLast4: txn.accountLast4 ?? null,
       $category: txn.category,
       $date: txn.date,
       $type: txn.transactionType,
@@ -121,8 +131,8 @@ export function dbSaveTransactions(txns: ExpenseTransaction[]): void {
     db.withTransactionSync(() => {
       const statement = db.prepareSync(`
         INSERT OR REPLACE INTO transactions (
-          id, amount, merchant, category, date, transaction_type, payment_method, confidence, is_user_corrected
-        ) VALUES ($id, $amount, $merchant, $category, $date, $type, $method, $confidence, $corrected);
+          id, amount, merchant, account_last4, category, date, transaction_type, payment_method, confidence, is_user_corrected
+        ) VALUES ($id, $amount, $merchant, $accountLast4, $category, $date, $type, $method, $confidence, $corrected);
       `);
 
       for (const txn of txns) {
@@ -130,6 +140,7 @@ export function dbSaveTransactions(txns: ExpenseTransaction[]): void {
           $id: txn.id,
           $amount: txn.amount,
           $merchant: txn.merchant,
+          $accountLast4: txn.accountLast4 ?? null,
           $category: txn.category,
           $date: txn.date,
           $type: txn.transactionType,
@@ -188,6 +199,7 @@ export function dbGetAllTransactions(): ExpenseTransaction[] {
       id: string;
       amount: number;
       merchant: string;
+      account_last4: string | null;
       category: string;
       date: string;
       transaction_type: string;
@@ -200,6 +212,7 @@ export function dbGetAllTransactions(): ExpenseTransaction[] {
       id: r.id,
       amount: r.amount,
       merchant: r.merchant,
+      accountLast4: r.account_last4,
       category: r.category as TransactionCategory,
       date: r.date,
       transactionType: r.transaction_type as Exclude<TransactionType, "UNKNOWN">,

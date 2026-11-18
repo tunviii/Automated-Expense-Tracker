@@ -86,7 +86,8 @@ export async function processIncomingSms(
     const sameMerchant =
       t.merchant.toLowerCase().trim() === expense.merchant.toLowerCase().trim();
     const sameDate = t.date === expense.date;
-    return sameAmount && sameMerchant && sameDate;
+    const sameAccount = (t.accountLast4 ?? null) === (expense.accountLast4 ?? null);
+    return sameAmount && sameMerchant && sameDate && sameAccount;
   });
 
   if (isDuplicate) {

@@ -208,23 +208,6 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      {/* ── Architecture Pipeline ──────────────────────────────────────── */}
-      <Text style={styles.sectionTitle}>Pipeline Architecture</Text>
-      <View style={styles.roadmap}>
-        <Text style={styles.roadmapItem}>
-          ✓ Step 1: Detect financial transaction vs OTP/spam
-        </Text>
-        <Text style={styles.roadmapItem}>
-          ✓ Step 2: Extract ₹ amount, merchant, date & payment mode
-        </Text>
-        <Text style={styles.roadmapItem}>
-          ✓ Step 3: 4-tier classification (Overrides → 172+ Merchants → ML API → Fallback)
-        </Text>
-        <Text style={styles.roadmapItem}>
-          ✓ Step 4: De-duplicate and save directly to SQLite
-        </Text>
-      </View>
-
       <View style={styles.footer}>
         <Text style={styles.version}>
           Automated Expense Tracker · APK Ready · Offline Hybrid ML
@@ -299,18 +282,6 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     marginTop: theme.spacing.md,
-  },
-  roadmap: {
-    backgroundColor: theme.colors.primaryLight,
-    borderRadius: theme.radius.md,
-    padding: theme.spacing.lg,
-    gap: theme.spacing.sm,
-  },
-  roadmapItem: {
-    color: theme.colors.primary,
-    fontSize: 13,
-    fontWeight: "600",
-    lineHeight: 20,
   },
   footer: { marginTop: theme.spacing.xxl, gap: theme.spacing.md },
   version: { color: theme.colors.mutedText, fontSize: 12, textAlign: "center" },
